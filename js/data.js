@@ -51,6 +51,6 @@ const createWizard = () => ({
     eyesColor: getRandomArrayElement(EYES_COLORS),
 });
 
-const similarWizards = Array.from({length: SIMILAR_WIZARD_COUNT}, createWizard);
+const createWizards = () => Array.from({length: SIMILAR_WIZARD_COUNT}, createWizard);
 
-console.log(similarWizards);
+export {createWizards};
