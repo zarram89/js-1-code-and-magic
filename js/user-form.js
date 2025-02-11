@@ -54,8 +54,8 @@ coatColorElement.addEventListener('click', (evt) => {
 
 const pristine = new Pristine(wizardForm, {
   classTo: 'setup-wizard-form__element',
-  errorTextParent: 'setup-wizard-form__element',
-  errorTextClass: 'setup-wizard-form__error-text',
+  errorTextParent: 'setup-wizard-form__element', // Элемент, куда будет выводиться текст с ошибкой
+  errorTextClass: 'setup-wizard-form__error-text', // Класс для элемента с текстом ошибки
 });
 
 wizardForm.addEventListener('submit', (evt) => {

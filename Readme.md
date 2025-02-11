@@ -190,3 +190,164 @@ emojiList.forEach((emojiListItem) => {
   </label>
 </form>
 ```
+
+### Pristine.js комментарии к коду прямо в разметке
+Чтобы описать валидации в JavaScript, нужно вызвать метод `.addValidator()`.
+Метод принимает несколько аргументов. Первый — элемент формы, который мы хотим валидировать.
+Вторым аргументом в .addValidator() нужно передать функцию проверки. Можно передавать по месту, но удобнее объявить функцию выше и передать по ссылке. Функция проверки обязательно должна возвращать true или false, в зависимости от того, валидно ли поле. Третьим аргументом нужно передать сообщение об ошибке.
+
+```html
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="utf-8">
+  <title>Валидация формы с помощью PristineJS</title>
+  <link rel="stylesheet" href="https://htmlacademy.github.io/console.js/latest/css/style.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <form class="form" autocomplete="off">
+    <h3>Доставка Кексокорма</h3>
+
+    <p class="form__item">
+      <label for="nickname">Имя питомца для открытки:</label>
+      <br>
+      <input
+        type="text"
+        name="nickname"
+        id="nickname"
+        placeholder="Кексик"
+      >
+    </p>
+
+    <p>
+      Размер:
+      <label><input type="radio" name="unit" value="s" checked>S</label>
+      <label><input type="radio" name="unit" value="m">M</label>
+    </p>
+
+    <p class="form__item">
+      <label for="amount">Количество:</label>
+      <br>
+      <input
+        type="number"
+        name="amount"
+        id="amount"
+        placeholder="10"
+      >
+    </p>
+
+    <p class="form__item">
+      <select name="delivery">
+        <option value="Доставка" selected>Доставка</option>
+        <option value="Самовывоз">Самовывоз</option>
+      </select>
+      <select name="date">
+        <option value="Сегодня" selected>Сегодня</option>
+        <option value="Завтра">Завтра</option>
+        <option value="На выходных">На выходных</option>
+      </select>
+    </p>
+
+    <p>
+      <button>Заказать</button>
+    </p>
+  </form>
+
+  <script src="https://htmlacademy.github.io/console.js/latest/js/index-silent.js"></script>
+  <script src="vendor/pristine.min.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>
+```
+
+```js
+const orderForm = document.querySelector('.form');
+
+
+const pristine = new Pristine(orderForm, {
+  classTo: 'form__item', // Элемент, на который будут добавляться классы
+  errorClass: 'form__item--invalid', // Класс, обозначающий невалидное поле
+  successClass: 'form__item--valid', // Класс, обозначающий валидное поле
+  errorTextParent: 'form__item', // Элемент, куда будет выводиться текст с ошибкой
+  errorTextTag: 'span', // Тег, который будет обрамлять текст ошибки
+  errorTextClass: 'form__error' // Класс для элемента с текстом ошибки
+});
+
+
+orderForm.addEventListener('submit', (evt) => {
+  evt.preventDefault();
+  pristine.validate();
+});
+
+function validateNickname (value) {
+  return value.length >= 2 && value.length <= 50;
+}
+
+pristine.addValidator(
+  orderForm.querySelector('#nickname'),
+  validateNickname,
+  'От 2 до 50 символов'
+);
+
+
+const amountField = orderForm.querySelector('#amount');
+const maxAmount = {
+  's': 10,
+  'm': 5
+};
+
+function validateAmount (value) {
+  const unit = orderForm.querySelector('[name="unit"]:checked');
+  return value.length && parseInt(value) <= maxAmount[unit.value];
+}
+
+function getAmountErrorMessage () {
+  const unit = orderForm.querySelector('[name="unit"]:checked');
+  return `Не больше ${maxAmount[unit.value]} штук в одни руки`;
+}
+
+pristine.addValidator(amountField, validateAmount, getAmountErrorMessage);
+
+function onUnitChange () {
+  amountField.placeholder = maxAmount[this.value];
+  pristine.validate(amountField);
+}
+
+orderForm
+  .querySelectorAll('[name="unit"]')
+  .forEach((item) => item.addEventListener('change', onUnitChange));
+
+
+const deliveryField = orderForm.querySelector('[name="delivery"]');
+const dateField = orderForm.querySelector('[name="date"]');
+const deliveryOption = {
+  'Доставка': ['Завтра', 'На выходных'],
+  'Самовывоз': ['Сегодня', 'Завтра']
+};
+
+function validateDelivery () {
+  return deliveryOption[deliveryField.value].includes(dateField.value);
+}
+
+function getDeliveryErrorMessage () {
+  return `
+    ${deliveryField.value}
+    ${dateField.value.toLowerCase()}
+    ${deliveryField.value === 'Доставка' ? 'невозможна' : 'невозможен'}
+  `;
+}
+
+pristine.addValidator(deliveryField, validateDelivery, getDeliveryErrorMessage);
+pristine.addValidator(dateField, validateDelivery, getDeliveryErrorMessage);
+
+
+orderForm.addEventListener('submit', (evt) => {
+  evt.preventDefault();
+  pristine.validate();
+});
+
+```
