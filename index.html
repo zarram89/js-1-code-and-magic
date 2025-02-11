@@ -62,7 +62,7 @@
   </header>
 
   <div class="overlay setup hidden">
-    <form class="setup-wizard-form">
+    <form class="setup-wizard-form" method="POST" action="https://32.javascript.htmlacademy.pro/code-and-magick" enctype="miltipar/form-data" autocomplete="off">
 
       <div class="setup-title">
         <div class="setup-user">
@@ -71,11 +71,11 @@
             <input type="file" name="avatar">
           </div>
           <label>
-            <input type="text" class="setup-user-name" value="Синий Пендальф">
+            <input type="text" class="setup-user-name" value="Синий Пендальф" name="username" required minlength="2" maxlength="25" data-pristine-required-message="Обязательное поле" data-pristine-minlength-message="Минимальная длина 2 символа" data-pristine-maxlength-message="Максимальная длина 25 символов">
           </label>
         </div>
 
-        <span class="setup-close" tabindex="0">×</span>
+        <span class=" setup-close" tabindex="0">×</span>
       </div>
 
       <div class="setup-artifacts-shop">
@@ -167,6 +167,7 @@
     </div>
   </template>
 
+  <script src="pristine/pristine.js"></script>
   <script src="js/main.js" type="module"></script>
 
 </body>
