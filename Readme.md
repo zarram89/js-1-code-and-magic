@@ -351,3 +351,223 @@ orderForm.addEventListener('submit', (evt) => {
 });
 
 ```
+
+## 11 Асинхронность. Работа с сетью
+
+## Promise Цепочка промисов
+
+Промис — это глобальный объект Promise. Он позволяет отследить выполнение асинхронной операции и сохранить её результат. Сами асинхронные операции выполняются как и прежде: не сразу, а когда-нибудь. Поэтому важно запомнить и уяснить, промисы — это не «магическая» замена асинхронных операций и не возможность получить результат такой операции сразу. Это просто объект, позволяющий более эффективно работать с асинхронным кодом.
+
+Чтобы воспользоваться промисами, необходимо создать экземпляр объекта Promise с помощью new:
+
+```js
+const myPromise = new Promise((resolve, reject) => {});
+```
+
+Аргументом в new Promise() нужно передать функцию. Её принято называть «функция-исполнитель» (от англ. executor). У этой функции два параметра-колбэка:
+
+- resolve — колбэк, который нужно вызвать, если промис завершён успешно;
+- reject — колбэк, который нужно вызвать, если промис завершён с ошибкой.
+
+Как только мы объявляем промис, он попадает в состояние pending, что означает выполняется:
+
+```js
+const myPromise = new Promise(() => {});
+```
+
+Затем, когда и если будут вызваны колбэки resolve или reject, промис перейдёт в состояние settled, что означает завершён:
+
+```js
+const myPromise = new Promise((resolve, reject) => {
+  if (2 > 1) {
+    resolve();
+  } else {
+    reject();
+  }
+});
+```
+
+В зависимости от того, будет вызван колбэк resolve или reject, состояние завершённости соответственно может быть fulfilled, что означает завершён успешно, или rejected, что означает завершён с ошибкой.
+
+Итого получается 3 состояния (settled не считаем за отдельное):
+
+- pending — выполняется
+- settled — завершён:
+- fulfilled — завершён успешно
+- rejected — завершён с ошибкой
+
+```js
+const myPromise = new Promise((resolve, reject) => {
+  resolve(); // На этой строчке myPromise будет успешно завершён
+  reject(); // И вызов reject уже ни на что не повлияет
+});
+```
+
+## Цепочка промисов
+
+```js
+const myPromise = new Promise((resolve, reject) => {});
+
+// Можно так
+myPromise.then(
+  () => {}, // Станет resolve
+  () => {}, // Станет reject
+);
+
+// Обычно идет цепочка промисов
+myPromise.then(() => {}).then(() => {}).then(() => {}).catch(() => {});
+
+// finally() позволяет не дублировать один и тот же код
+myPromise
+  .then(() => {
+    console.log('Промис завершён успешно :-)');
+-    console.log('Спасибо за внимание');
+  })
+  .catch(() => {
+    console.log('Промис завершён с ошибкой :-(');
+-    console.log('Спасибо за внимание');
+  })
++  .finally(() => {
++    console.log('Спасибо за внимание');
++  });
+
+// Результат предыдущего промиса в цепочке
+// Объявляем промис sum и сразу успешно его завершаем с результатом 1
+const sum = new Promise((resolve) => resolve(1));
+
+sum
+  .then((result) => result + 1) // Затем результат попадёт в then, где увеличивается на единицу и передаётся дальше
+  .then((result) => result + 1) // И снова +1
+  .then((result) => console.log(result)); // В итоге: 1 + 1 + 1 = 3
+
+```
+
+## Fetch
+
+Начнём знакомство с fetch() с рассмотрения интерфейса. Функция принимает два параметра: адрес ресурса, на который требуется отправить запрос, и объект с настройками. Второй параметр опционален и может не использоваться:
+
+```js
+// fetch(адрес[, настройки]);
+
+fetch('https://jsonplaceholder.typicode.com/posts')
+  .then((response) => response.json())
+  .then((posts) => console.log(posts));
+
+```
+
+Этот простой пример демонстрирует выполнение GET-запроса для получения данных (список публикаций) в JSON. Первым аргументом fetch() мы передали адрес ресурса. Второй аргумент не задали, так как для выполнения GET-запроса дополнительные настройки не требуются. По умолчанию fetch() выполнит именно GET-запрос.
+
+Раз fetch() возвращает промис, мы получаем возможность использовать знакомые методы then, catch и finally. В случае успешного завершения промиса мы получим от сервера объект с ответом. Само собой не в текстовом виде, а в структурированном. Объект позволит понять состояние ответа и получить не только данные из тела ответа, но и при необходимости служебную информацию. Например, заголовки, установленные сервером.
+
+```js
+// Для проверки обработки ошибки изменим часть адреса,
+// заведомо указав несуществующий адрес /posts1
+fetch('https://jsonplaceholder.typicode.com/posts1')
+  .then((response) => {
+    if (response.ok) {
+      return response;
+    }
+
+    throw new Error(`${response.status} — ${response.statusText}`);
+  })
+  .then((response) => response.json())
+  .then((posts) => console.log(posts))
+  .catch((error) => console.log(error));
+```
+
+## Отправка информации на сервер
+
+```js
+// Данные для отправки
+const post = {
+  userId: 31337,
+  title: 'Обзор метода fetch',
+  body: 'Содержимое обзора',
+};
+
+// Вторым аргументом передадим объект с настройками.
+// Определим в нём метод, заголовки и тело запроса
+fetch(
+  'https://jsonplaceholder.typicode.com/posts',
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(post),
+  })
+  .then((response) => response.json())
+  .then((json) => console.log(json));
+```
+
+## XMLHttpRequest → fetch
+
+Нужно создать объект, вызвать метод open для открытия соединения, затем вызвать метод send, чтобы отправить запрос, добавить обработчик события load.
+
+```js
+const xhr = new XMLHttpRequest();
+
+xhr.addEventListener('load', () => {
+  console.log(xhr.status, xhr.statusText);
+});
+
+xhr.open('GET', 'https://32.javascript.htmlacademy.pro/code-and-magick/data');
+
+xhr.send();
+```
+## fetch
+
+### Отправить:
+```js
+fetch(
+  'https://32.javascript.htmlacademy.pro/code-and-magick',
+  {
+    method: 'POST',
+    credentials: 'same-origin',
+    body: new FormData(),
+  },
+)
+  .then((response) => {
+    console.log(response.status);
+    return response.json();
+  })
+  .then((data) => {
+    console.log('Результат', data);
+  });
+
+```
+
+### Получить:
+```main.js
+import {createLoader} from './load.js';
+
+const loadAnimals = createLoader(console.log, console.error);
+
+loadAnimals();
+```
+
+```load.js
+const createLoader = (onSuccess, onError) => () => fetch(
+  'https://32.javascript.htmlacademy.pro/code-and-magick/data',
+  {
+    method: 'GET',
+    credentials: 'same-origin',
+  },
+)
+  .then((response) => {
+    if (response.ok) {
+      return response.json();
+    }
+
+    throw new Error(`${response.status} ${response.statusText}`);
+  })
+  .then((data) => {
+    onSuccess(data);
+  })
+  .catch((err) => {
+    onError(err);
+  });
+
+export {createLoader};
+```
+
