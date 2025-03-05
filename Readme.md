@@ -903,3 +903,116 @@ const createLoader = (onSuccess, onError) => () => fetch(
 
 export {createLoader};
 ```
+
+### 11.19. Async/Await
+
+Оператор async позволяет определить асинхронную функцию. Результатом выполнения такой функции всегда будет новый промис. async применяется при объявлении функций как декларативно, так и для функций-выражений:
+
+```js
+// Function Declaration
+async function foo () {}
+
+// Function Expression
+const bar = async function () {};
+
+// Arrow Function Expression
+const baz = async () => {};
+
+console.log(foo()); // Promise
+console.log(bar()); // Promise
+console.log(baz()); // Promise
+```
+
+Пример:
+
+Асинхронная функция foo состоит из одного действия: возвращает строку Hello, world. Поскольку функция асинхронная, то результатом её выполнения будет промис (да-да, именно промис, а не строка Hello, world в чистом виде), и чтобы получить строку, нужно воспользоваться методом then. Это лишний раз доказывает, что промисы никуда не делись.
+
+```js
+async function foo () {
+  return 'Hello, world';
+}
+
+foo()
+  .then((text) => console.log(text)); // Hello, world
+```
+
+### await
+
+Оператор await позволяет дождаться выполнения промиса, за счёт чего достигается сходство с синхронным кодом. Иными словами оператор await вместе с оператором async образуют тандем, который как раз позволяет сделать асинхронный код похожим на синхронный.
+
+```js
+async function foo () {
+  return 'Hello, world';
+}
+
+const text = await foo();
+console.log(text); // Hello, world
+```
+
+### async и await на практике
+
+Сервером выступит уже знакомый вам сайт «JSON Placeholder».
+
+Как это бы выглядело на промисах:
+
+```js
+function getPosts (callback) {
+  fetch('https://jsonplaceholder.typicode.com/posts')
+    .then((response) => response.json())
+    .then(callback);
+}
+
+getPosts((posts) => {
+  console.log('Список публикаций:');
+  console.log(posts);
+});
+```
+
+Как это выглядит с `async` и `await`:
+
+```js
+async function getPosts () {
+  const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+  const posts = await response.json();
+
+  return posts;
+}
+
+const posts = await getPosts();
+console.log('Список публикаций:');
+console.log(posts); // Выведет массив с данными
+
+```
+
+### Обработка ошибок
+
+При работе с промисами для обработки ошибок используется метод `catch`.
+При использовании async и await обрабатывать ошибки можно с помощью конструкции `try...catch`:
+
+```js
+async function getPosts () {
+  let response;
+
+  try {
+    // Специально укажем некорректный адрес /404
+    response = await fetch('https://jsonplaceholder.typicode.com/404');
+    if (!response.ok) {
+      throw new Error(`${response.status} — ${response.statusText}`);
+    }
+  } catch (err) {
+    // В случае ошибки вернём пустой массив публикаций,
+    // но можно делать, что угодно
+    return [];
+  }
+
+  const posts = await response.json();
+
+  return posts;
+}
+
+const posts = await getPosts();
+console.log('Список публикаций:');
+console.log(posts); // []
+```
+
+При выполнении метода `fetch` мы проверяем свойство ответа `ok`, и если запрос был выполнен с ошибкой, то бросаем исключение, которое будет перехвачено в блоке `try...catch`. И в этом случае функция `getPosts` вернёт промис с пустым массивом в качестве данных.
