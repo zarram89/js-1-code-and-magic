@@ -870,15 +870,16 @@ fetch(
 ```
 
 ### Получить:
-```main.js
+main.js
+```js
 import {createLoader} from './load.js';
 
 const loadAnimals = createLoader(console.log, console.error);
 
 loadAnimals();
 ```
-
-```load.js
+load.js
+```js
 const createLoader = (onSuccess, onError) => () => fetch(
   'https://32.javascript.htmlacademy.pro/code-and-magick/data',
   {
